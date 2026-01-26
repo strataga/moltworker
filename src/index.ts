@@ -126,28 +126,35 @@ async function ensureClawdbotGateway(
   sandbox: Sandbox,
   env: ClawdbotEnv
 ): Promise<Process> {
-  // Check if Clawdbot is already running
+  // Check if Clawdbot is already running or starting
   const existingProcess = await findExistingClawdbotProcess(sandbox);
   if (existingProcess) {
-    console.log('Reusing existing Clawdbot process:', existingProcess.id, 'status:', existingProcess.status);
+    console.log('Found existing Clawdbot process:', existingProcess.id, 'status:', existingProcess.status);
 
-    // Always wait for port to be ready, even if process is "running"
-    // The process might be running but the port might not be reachable yet
+    // Use longer timeout for "starting" processes to avoid race conditions
+    const timeout = existingProcess.status === 'starting' ? STARTUP_TIMEOUT_MS : 30_000;
+    
     try {
-      console.log('Verifying Clawdbot gateway is reachable on port', CLAWDBOT_PORT);
+      console.log('Waiting for Clawdbot gateway on port', CLAWDBOT_PORT, 'timeout:', timeout);
       await existingProcess.waitForPort(CLAWDBOT_PORT, {
         mode: 'tcp',
-        timeout: 30_000, // Shorter timeout for existing process
+        timeout,
       });
       console.log('Clawdbot gateway is reachable');
       return existingProcess;
     } catch (e) {
-      // Port not reachable - process might have crashed, kill and restart
-      console.log('Existing process not reachable, killing and restarting...');
-      try {
-        await existingProcess.kill();
-      } catch (killError) {
-        console.log('Failed to kill process:', killError);
+      // Only kill and restart if the process is not "starting"
+      // If it's starting, another request is likely already handling it
+      if (existingProcess.status !== 'starting') {
+        console.log('Existing process not reachable, killing and restarting...');
+        try {
+          await existingProcess.kill();
+        } catch (killError) {
+          console.log('Failed to kill process:', killError);
+        }
+      } else {
+        console.log('Process still starting but port timeout - will retry');
+        throw new Error('Clawdbot is still starting, please retry');
       }
       // Fall through to start a new process
     }
