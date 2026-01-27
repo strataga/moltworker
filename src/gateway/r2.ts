@@ -29,6 +29,12 @@ export async function mountR2Storage(sandbox: Sandbox, env: ClawdbotEnv): Promis
     console.log('R2 bucket mounted successfully - clawdbot data will persist across sessions');
     return true;
   } catch (err) {
+    // Check if the error is "already mounted" - that's actually success
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    if (errorMessage.includes('already in use')) {
+      console.log('R2 bucket already mounted at', R2_MOUNT_PATH);
+      return true;
+    }
     // Don't fail if mounting fails - clawdbot can still run without persistent storage
     console.error('Failed to mount R2 bucket:', err);
     return false;
