@@ -356,13 +356,47 @@ echo "Gateway will be available on port 18789"
 rm -f /tmp/clawdbot-gateway.lock 2>/dev/null || true
 rm -f "$CONFIG_DIR/gateway.lock" 2>/dev/null || true
 
+# Test outbound network connectivity
+echo "[NETWORK] Testing outbound connectivity..."
+if ping -c 2 8.8.8.8 > /dev/null 2>&1; then
+    echo "[NETWORK] ✓ Can reach internet (DNS test: 8.8.8.8)"
+else
+    echo "[NETWORK] ✗ Cannot reach internet"
+fi
+
+# Test Slack API connectivity
+echo "[NETWORK] Testing Slack API connectivity..."
+if curl -I -m 5 https://slack.com/ > /dev/null 2>&1; then
+    echo "[NETWORK] ✓ Can reach Slack API (https://slack.com)"
+else
+    echo "[NETWORK] ✗ Cannot reach Slack API"
+fi
+
+# Test Slack WebSocket endpoints
+echo "[NETWORK] Testing Slack WebSocket endpoints..."
+if curl -I -m 5 https://wss-primary.slack.com/ > /dev/null 2>&1; then
+    echo "[NETWORK] ✓ Can reach Slack WebSocket server"
+else
+    echo "[NETWORK] ✗ Cannot reach Slack WebSocket server"
+fi
+
 BIND_MODE="lan"
 echo "Dev mode: ${CLAWDBOT_DEV_MODE:-false}, Bind mode: $BIND_MODE"
 
+# Log environment variables (sanitized)
+echo "[ENV] SLACK_BOT_TOKEN present: $([ -n "$SLACK_BOT_TOKEN" ] && echo 'YES' || echo 'NO')"
+echo "[ENV] SLACK_APP_TOKEN present: $([ -n "$SLACK_APP_TOKEN" ] && echo 'YES' || echo 'NO')"
+echo "[ENV] CLAWDBOT_GATEWAY_TOKEN present: $([ -n "$CLAWDBOT_GATEWAY_TOKEN" ] && echo 'YES' || echo 'NO')"
+
+# Show the gateway command that will be executed
 if [ -n "$CLAWDBOT_GATEWAY_TOKEN" ]; then
-    echo "Starting gateway with token auth..."
+    CMD="clawdbot gateway --port 18789 --verbose --allow-unconfigured --bind $BIND_MODE --token [REDACTED]"
+    echo "[GATEWAY] Starting with command: $CMD"
+    echo "[GATEWAY] Starting gateway with token auth..."
     exec clawdbot gateway --port 18789 --verbose --allow-unconfigured --bind "$BIND_MODE" --token "$CLAWDBOT_GATEWAY_TOKEN"
 else
-    echo "Starting gateway with device pairing (no token)..."
+    CMD="clawdbot gateway --port 18789 --verbose --allow-unconfigured --bind $BIND_MODE"
+    echo "[GATEWAY] Starting with command: $CMD"
+    echo "[GATEWAY] Starting gateway with device pairing (no token)..."
     exec clawdbot gateway --port 18789 --verbose --allow-unconfigured --bind "$BIND_MODE"
 fi
