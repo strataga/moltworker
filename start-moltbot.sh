@@ -288,6 +288,52 @@ const configSummary = {
     }
 };
 console.log('Config summary:', JSON.stringify(configSummary, null, 2));
+
+// Test Slack connectivity on startup
+if (config.channels?.slack?.enabled && config.channels?.slack?.botToken) {
+    console.log('[SLACK TEST] Sending startup test message...');
+    const https = require('https');
+    const testMessage = JSON.stringify({
+        text: '🦞 OpenClaw gateway started successfully! Slack Socket Mode is configured.'
+    });
+
+    // Post to chat.postMessage API - will send to the bot's DM with itself (appears in Slackbot)
+    const options = {
+        hostname: 'slack.com',
+        port: 443,
+        path: '/api/chat.postMessage?channel=USLACKBOT',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Authorization': 'Bearer ' + config.channels.slack.botToken,
+            'Content-Length': testMessage.length
+        }
+    };
+
+    const req = https.request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => {
+            try {
+                const response = JSON.parse(data);
+                if (response.ok) {
+                    console.log('[SLACK TEST] ✓ Test message sent successfully');
+                } else {
+                    console.log('[SLACK TEST] ✗ Failed:', response.error);
+                }
+            } catch (e) {
+                console.log('[SLACK TEST] ✗ Parse error:', e.message);
+            }
+        });
+    });
+
+    req.on('error', (error) => {
+        console.log('[SLACK TEST] ✗ Request failed:', error.message);
+    });
+
+    req.write(testMessage);
+    req.end();
+}
 EOFNODE
 
 # ============================================================
