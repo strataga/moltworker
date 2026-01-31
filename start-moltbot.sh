@@ -202,10 +202,18 @@ if (process.env.CLAWDBOT_DEV_MODE === 'true') {
 
 // Slack configuration
 if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_APP_TOKEN) {
+    console.log('[SLACK CONFIG] Configuring Slack Socket Mode...');
+    console.log('[SLACK CONFIG] Has BOT_TOKEN:', !!process.env.SLACK_BOT_TOKEN, 'length:', process.env.SLACK_BOT_TOKEN?.length);
+    console.log('[SLACK CONFIG] Has APP_TOKEN:', !!process.env.SLACK_APP_TOKEN, 'length:', process.env.SLACK_APP_TOKEN?.length);
     config.channels.slack = config.channels.slack || {};
     config.channels.slack.botToken = process.env.SLACK_BOT_TOKEN;
     config.channels.slack.appToken = process.env.SLACK_APP_TOKEN;
     config.channels.slack.enabled = true;
+    console.log('[SLACK CONFIG] Slack channel enabled:', config.channels.slack.enabled);
+} else {
+    console.log('[SLACK CONFIG] Slack tokens not found, skipping Slack configuration');
+    console.log('[SLACK CONFIG] Has BOT_TOKEN:', !!process.env.SLACK_BOT_TOKEN);
+    console.log('[SLACK CONFIG] Has APP_TOKEN:', !!process.env.SLACK_APP_TOKEN);
 }
 
 // Base URL override (e.g., for Cloudflare AI Gateway)
@@ -268,7 +276,18 @@ if (isOpenAI) {
 // Write updated config
 fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 console.log('Configuration updated successfully');
-console.log('Config:', JSON.stringify(config, null, 2));
+
+// Log config structure without sensitive tokens
+const configSummary = {
+    agents: { defaults: { model: config.agents?.defaults?.model?.primary || 'not set' } },
+    gateway: { port: config.gateway?.port, mode: config.gateway?.mode },
+    channels: {
+        slack: { enabled: config.channels?.slack?.enabled || false, hasTokens: !!(config.channels?.slack?.botToken && config.channels?.slack?.appToken) },
+        telegram: { enabled: config.channels?.telegram?.enabled || false },
+        discord: { enabled: config.channels?.discord?.enabled || false }
+    }
+};
+console.log('Config summary:', JSON.stringify(configSummary, null, 2));
 EOFNODE
 
 # ============================================================
