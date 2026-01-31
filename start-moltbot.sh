@@ -182,23 +182,23 @@ if (process.env.CLAWDBOT_DEV_MODE === 'true') {
     config.gateway.controlUi.allowInsecureAuth = true;
 }
 
-// Telegram configuration
-if (process.env.TELEGRAM_BOT_TOKEN) {
-    config.channels.telegram = config.channels.telegram || {};
-    config.channels.telegram.botToken = process.env.TELEGRAM_BOT_TOKEN;
-    config.channels.telegram.enabled = true;
-    config.channels.telegram.dm = config.channels.telegram.dm || {};
-    config.channels.telegram.dmPolicy = process.env.TELEGRAM_DM_POLICY || 'pairing';
-}
+// Telegram configuration (DISABLED - telegram.dm not supported in OpenClaw 2026.1.24-3)
+// if (process.env.TELEGRAM_BOT_TOKEN) {
+//     config.channels.telegram = config.channels.telegram || {};
+//     config.channels.telegram.botToken = process.env.TELEGRAM_BOT_TOKEN;
+//     config.channels.telegram.enabled = true;
+//     config.channels.telegram.dm = config.channels.telegram.dm || {};
+//     config.channels.telegram.dmPolicy = process.env.TELEGRAM_DM_POLICY || 'pairing';
+// }
 
-// Discord configuration
-if (process.env.DISCORD_BOT_TOKEN) {
-    config.channels.discord = config.channels.discord || {};
-    config.channels.discord.token = process.env.DISCORD_BOT_TOKEN;
-    config.channels.discord.enabled = true;
-    config.channels.discord.dm = config.channels.discord.dm || {};
-    config.channels.discord.dm.policy = process.env.DISCORD_DM_POLICY || 'pairing';
-}
+// Discord configuration (DISABLED - discord.dm not supported in OpenClaw 2026.1.24-3)
+// if (process.env.DISCORD_BOT_TOKEN) {
+//     config.channels.discord = config.channels.discord || {};
+//     config.channels.discord.token = process.env.DISCORD_BOT_TOKEN;
+//     config.channels.discord.enabled = true;
+//     config.channels.discord.dm = config.channels.discord.dm || {};
+//     config.channels.discord.dm.policy = process.env.DISCORD_DM_POLICY || 'pairing';
+// }
 
 // Slack configuration
 if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_APP_TOKEN) {
