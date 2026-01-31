@@ -16,7 +16,7 @@ RUN npm install -g pnpm
 
 # Install moltbot (CLI is still named clawdbot until upstream renames)
 # Pin to specific version for reproducible builds
-RUN npm install -g clawdbot@2026.1.30 \
+RUN npm install -g clawdbot@2026.1.24-3 \
     && clawdbot --version
 
 # Create moltbot directories (paths still use clawdbot until upstream renames)
