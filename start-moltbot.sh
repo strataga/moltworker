@@ -275,19 +275,28 @@ if (isOpenAI) {
 
 // Write updated config
 fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-console.log('Configuration updated successfully');
+console.log('[CONFIG] Configuration updated successfully');
+
+// Write config to /tmp for debugging
+fs.writeFileSync('/tmp/clawdbot-config-debug.json', JSON.stringify(config, null, 2));
+console.log('[CONFIG] Debug config written to /tmp/clawdbot-config-debug.json');
 
 // Log config structure without sensitive tokens
 const configSummary = {
     agents: { defaults: { model: config.agents?.defaults?.model?.primary || 'not set' } },
     gateway: { port: config.gateway?.port, mode: config.gateway?.mode },
     channels: {
-        slack: { enabled: config.channels?.slack?.enabled || false, hasTokens: !!(config.channels?.slack?.botToken && config.channels?.slack?.appToken) },
+        slack: {
+            enabled: config.channels?.slack?.enabled || false,
+            hasTokens: !!(config.channels?.slack?.botToken && config.channels?.slack?.appToken),
+            botTokenPrefix: config.channels?.slack?.botToken?.substring(0, 9) || 'missing',
+            appTokenPrefix: config.channels?.slack?.appToken?.substring(0, 9) || 'missing'
+        },
         telegram: { enabled: config.channels?.telegram?.enabled || false },
         discord: { enabled: config.channels?.discord?.enabled || false }
     }
 };
-console.log('Config summary:', JSON.stringify(configSummary, null, 2));
+console.log('[CONFIG] Config summary:', JSON.stringify(configSummary, null, 2));
 
 // Test Slack connectivity on startup
 if (config.channels?.slack?.enabled && config.channels?.slack?.botToken) {
