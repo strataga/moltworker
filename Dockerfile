@@ -27,7 +27,7 @@ RUN mkdir -p /root/.clawdbot \
     && mkdir -p /root/clawd/skills
 
 # Copy startup script
-# Build cache bust: 2026-01-31-v2026.1.24-stable-slack-support
+# Build cache bust: 2026-01-31-v2026.1.24-3-slack-debug-r2-cleared
 COPY start-moltbot.sh /usr/local/bin/start-moltbot.sh
 RUN chmod +x /usr/local/bin/start-moltbot.sh
 
