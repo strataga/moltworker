@@ -16,7 +16,7 @@ RUN npm install -g pnpm
 
 # Install moltbot (CLI is still named clawdbot until upstream renames)
 # Pin to specific version for reproducible builds
-RUN npm install -g clawdbot@2026.1.24-3 \
+RUN npm install -g clawdbot@2026.1.30 \
     && clawdbot --version
 
 # Create moltbot directories (paths still use clawdbot until upstream renames)
@@ -27,7 +27,7 @@ RUN mkdir -p /root/.clawdbot \
     && mkdir -p /root/clawd/skills
 
 # Copy startup script
-# Build cache bust: 2026-01-28-v26-browser-skill
+# Build cache bust: 2026-01-31-v2026.1.30-telegram-fixes
 COPY start-moltbot.sh /usr/local/bin/start-moltbot.sh
 RUN chmod +x /usr/local/bin/start-moltbot.sh
 
