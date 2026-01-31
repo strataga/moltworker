@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '../types';
 import { MOLTBOT_PORT } from '../config';
-import { findExistingMoltbotProcess } from '../gateway';
+import { findExistingMoltbotProcess, ensureMoltbotGateway } from '../gateway';
 
 /**
  * Public routes - NO Cloudflare Access authentication required
@@ -62,5 +62,51 @@ publicRoutes.get('/_admin/assets/*', async (c) => {
   const assetUrl = new URL(assetPath, url.origin);
   return c.env.ASSETS.fetch(new Request(assetUrl.toString(), c.req.raw));
 });
+
+// =============================================================================
+// WEBHOOK ROUTES: Public endpoints for messaging integrations
+// These bypass Cloudflare Access auth and proxy directly to the gateway
+// =============================================================================
+
+/**
+ * Helper to proxy webhook requests to the moltbot gateway
+ */
+async function proxyWebhook(c: any): Promise<Response> {
+  const sandbox = c.get('sandbox');
+  const request = c.req.raw;
+
+  try {
+    // Ensure gateway is running
+    await ensureMoltbotGateway(sandbox, c.env);
+
+    // Proxy the request to the gateway
+    const response = await sandbox.containerFetch(request, MOLTBOT_PORT);
+    return response;
+  } catch (error) {
+    console.error('[WEBHOOK] Failed to proxy:', error);
+    return c.json({
+      error: 'Gateway not available',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, 503);
+  }
+}
+
+// POST /telegram - Telegram Bot webhook (legacy path)
+publicRoutes.post('/telegram', proxyWebhook);
+
+// POST /telegram-webhook - Telegram Bot webhook (OpenClaw standard path)
+publicRoutes.post('/telegram-webhook', proxyWebhook);
+
+// POST /slack/events - Slack Events API webhook
+publicRoutes.post('/slack/events', proxyWebhook);
+
+// POST /slack/interactions - Slack Interactivity webhook
+publicRoutes.post('/slack/interactions', proxyWebhook);
+
+// POST /slack/commands - Slack Slash Commands webhook
+publicRoutes.post('/slack/commands', proxyWebhook);
+
+// POST /discord/interactions - Discord Interactions webhook
+publicRoutes.post('/discord/interactions', proxyWebhook);
 
 export { publicRoutes };
